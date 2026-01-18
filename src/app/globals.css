@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  a {
+    @apply text-sky-300 hover:underline;
+  }
+
+  mark {
+    @apply rounded-md border border-emerald-200/30 bg-emerald-300/20 px-1 py-0.5 text-slate-100;
+  }
+}

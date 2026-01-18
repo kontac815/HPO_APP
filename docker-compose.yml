@@ -1,0 +1,48 @@
+services:
+  backend_init:
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.build_faiss"]
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      OPENAI_EMBED_MODEL: ${OPENAI_EMBED_MODEL:-text-embedding-3-small}
+      HPO_CSV_PATH: /data/HPO_depth_ge3.csv
+      FAISS_DIR: /app/storage/faiss
+      REBUILD_FAISS_ON_STARTUP: ${REBUILD_FAISS_ON_STARTUP:-false}
+      ALLOW_NO_CANDIDATE_FIT: ${ALLOW_NO_CANDIDATE_FIT:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ${HPO_CSV_HOST_PATH:-../HPO_depth_ge3.csv}:/data/HPO_depth_ge3.csv:ro
+      - ./backend/storage:/app/storage
+    profiles: ["init"]
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      OPENAI_EMBED_MODEL: ${OPENAI_EMBED_MODEL:-text-embedding-3-small}
+      HPO_CSV_PATH: /data/HPO_depth_ge3.csv
+      FAISS_DIR: /app/storage/faiss
+      REBUILD_FAISS_ON_STARTUP: ${REBUILD_FAISS_ON_STARTUP:-false}
+      ALLOW_NO_CANDIDATE_FIT: ${ALLOW_NO_CANDIDATE_FIT:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ${HPO_CSV_HOST_PATH:-../HPO_depth_ge3.csv}:/data/HPO_depth_ge3.csv:ro
+      - ./backend/storage:/app/storage
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
